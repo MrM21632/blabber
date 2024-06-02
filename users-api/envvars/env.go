@@ -1,17 +1,18 @@
 package envvars
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"strconv"
 )
 
-var ErrEmptyEnvVar = errors.New("getenv: Specified environment variable is empty or missing")
-
 func GetenvStr(key string) (string, error) {
 	result := os.Getenv(key)
 	if result == "" {
-		return result, ErrEmptyEnvVar
+		return result, fmt.Errorf(
+			"getenv: Environment variable %s is empty or missing",
+			key,
+		)
 	}
 
 	return result, nil
