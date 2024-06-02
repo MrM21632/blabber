@@ -3,18 +3,35 @@ package main
 import (
 	"fmt"
 	"users/envvars"
+	"users/uidgen"
+	"users/users"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
+var (
+	UidGenNode *uidgen.UniqueIdGenerator
+	PassParams *users.Argon2idParams
+)
+
 func main() {
 	godotenv.Load()
-	// uidgen_node, err := uidgen.InitializeNode()
-	// if err != nil {
-	// 	fmt.Printf("Encountered error while initializing uidgen node: %s", err.Error())
-	// 	return
-	// }
+	UidGenNode, err := uidgen.InitializeNode()
+	if err != nil {
+		fmt.Printf("Encountered error while initializing uidgen node: %s", err.Error())
+		return
+	}
+	_ = UidGenNode // TODO: Remove once we're using this variable
+
+	PassParams := &users.Argon2idParams{
+		Memory:  64 * 1024,
+		Time:    3,
+		Threads: 2,
+		Saltlen: 16,
+		Hashlen: 32,
+	}
+	_ = PassParams // TODO: Remove once we're using this variable
 
 	server_port, err := envvars.GetenvInteger("SERVER_PORT")
 	if err != nil {
