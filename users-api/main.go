@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	UidGenNode *uidgen.UniqueIdGenerator
-	PassParams *users.Argon2idParams
+	UidGenNode     *uidgen.UniqueIdGenerator
+	PasswordParams *users.Argon2idParams
 )
 
 func main() {
@@ -24,14 +24,14 @@ func main() {
 	}
 	_ = UidGenNode // TODO: Remove once we're using this variable
 
-	PassParams := &users.Argon2idParams{
+	PasswordParams := &users.Argon2idParams{
 		Memory:  64 * 1024,
 		Time:    3,
 		Threads: 2,
 		Saltlen: 16,
 		Hashlen: 32,
 	}
-	_ = PassParams // TODO: Remove once we're using this variable
+	_ = PasswordParams // TODO: Remove once we're using this variable
 
 	server_port, err := envvars.GetenvInteger("SERVER_PORT")
 	if err != nil {
