@@ -12,9 +12,9 @@ import (
 )
 
 type Argon2idParams struct {
-	Memory  uint32
-	Time    uint32
-	Threads uint8
+	Memory  uint32 // Note: Minimum 19MiB recommended
+	Time    uint32 // Note: 2 iterations are deemed sufficient with recommended memory configurations
+	Threads uint8  // Note: 1 thread is deemed sufficient with recommended memory and iteration configurations
 	Saltlen uint32 // Note: 16 bytes is recommended for salt length
 	Hashlen uint32 // Note: 32 bytes is recommended for hash length
 }
