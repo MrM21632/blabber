@@ -16,6 +16,14 @@ type FollowUserRequest struct {
 	FollowedID string `json:"followed_id"`
 }
 
+type GetFollowersRequest struct {
+	FollowedID string `json:"followed_id"`
+}
+
+type GetFollowsRequest struct {
+	FollowerID string `json:"follower_id"`
+}
+
 type UserFollowerEntity struct {
 	ID       string `json:"id"`
 	Handle   string `json:"handle"`
