@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 	"log"
+	"net/http"
 	"time"
 	"users/users/models"
 
@@ -69,6 +70,28 @@ func GetUserRecord(user_id string) (*models.User, error) {
 	return &record, nil
 }
 
+func DeleteUserRecord(user_id string) (int, error) {
+	var record models.User
+	found := Database.Where("user_id = ?", user_id).First(&record)
+	if found.Error != nil {
+		log.Println("Error occurred during find: " + found.Error.Error())
+		return http.StatusInternalServerError, found.Error
+	}
+	if found.RowsAffected == 0 {
+		return http.StatusNotFound, errors.New("record not found in database")
+	}
+
+	result := Database.Delete(&record)
+	if result.Error != nil {
+		log.Println("Error occurred during delete: " + result.Error.Error())
+		return http.StatusInternalServerError, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return http.StatusGone, errors.New("record already deleted")
+	}
+	return http.StatusOK, nil
+}
+
 func WriteNewFollowingRecord(body *models.FollowUserRequest) (*models.Following, error) {
 	new_record := models.Following{
 		FollowerID: body.FollowerID,
@@ -103,4 +126,29 @@ func GetFollowingRecord(follower_id, followed_id string) (*models.Following, err
 	}
 
 	return &record, nil
+}
+
+func DeleteFollowingRecord(follower_id, followed_id string) (int, error) {
+	var record models.Following
+	found := Database.
+		Where("user_following.follower_id = ?", follower_id).
+		Where("user_following.followed_id = ?", followed_id).
+		First(&record)
+	if found.Error != nil {
+		log.Println("Error occurred during find: " + found.Error.Error())
+		return http.StatusInternalServerError, found.Error
+	}
+	if found.RowsAffected == 0 {
+		return http.StatusNotFound, errors.New("record not found in database")
+	}
+
+	result := Database.Delete(&record)
+	if result.Error != nil {
+		log.Println("Error occurred during delete: " + result.Error.Error())
+		return http.StatusInternalServerError, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return http.StatusGone, errors.New("record already deleted")
+	}
+	return http.StatusOK, nil
 }
