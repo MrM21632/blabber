@@ -17,6 +17,9 @@ var (
 
 func main() {
 	godotenv.Load()
+
+	users.ConnectToDatabase()
+
 	UidGenNode, err := uidgen.InitializeNode()
 	if err != nil {
 		fmt.Printf("Encountered error while initializing uidgen node: %s", err.Error())
