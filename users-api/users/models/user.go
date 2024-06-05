@@ -4,6 +4,7 @@ import "time"
 
 type User struct {
 	ID        string    `json:"id" gorm:"primaryKey;autoincrement:false"`
+	Handle    string    `json:"handle"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email_address"`
 	Password  string    `json:"password_hash"`

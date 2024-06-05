@@ -38,6 +38,7 @@ func WriteNewUserRecord(
 
 	new_record := models.User{
 		ID:        new_user_id,
+		Handle:    body.Handle,
 		Username:  body.Username,
 		Email:     body.Email,
 		Password:  password_hash,
@@ -126,6 +127,44 @@ func GetFollowingRecord(follower_id, followed_id string) (*models.Following, err
 	}
 
 	return &record, nil
+}
+
+func GetFollowersForUser(followed_id string) ([]models.UserFollowerEntity, error) {
+	var followers []models.UserFollowerEntity
+	query := Database.
+		Table("user").
+		Select("user.id, user.handle, user.username").
+		Joins("inner join user_following on users.id = user_following.follower_id").
+		Where("user_following.followed_id = ?", followed_id).
+		Scan(&followers)
+	if query.Error != nil {
+		log.Println("Error occurred during query: " + query.Error.Error())
+		return nil, query.Error
+	}
+	if query.RowsAffected == 0 {
+		return []models.UserFollowerEntity{}, nil
+	}
+
+	return followers, nil
+}
+
+func GetFollowsForUser(follower_id string) ([]models.UserFollowerEntity, error) {
+	var follows []models.UserFollowerEntity
+	query := Database.
+		Table("user").
+		Select("user.id, user.handle, user.username").
+		Joins("inner join user_following on users.id = user_following.followed_id").
+		Where("user_following.follower_id = ?", follower_id).
+		Scan(&follows)
+	if query.Error != nil {
+		log.Println("Error occurred during query: " + query.Error.Error())
+		return nil, query.Error
+	}
+	if query.RowsAffected == 0 {
+		return []models.UserFollowerEntity{}, nil
+	}
+
+	return follows, nil
 }
 
 func DeleteFollowingRecord(follower_id, followed_id string) (int, error) {
