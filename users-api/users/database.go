@@ -71,26 +71,56 @@ func GetUserRecord(user_id string) (*models.User, error) {
 	return &record, nil
 }
 
-func DeleteUserRecord(user_id string) (int, error) {
+func UpdateUserRecord(body *models.UpdateUserRequest) error {
+	to_update := models.User{}
+	query := Database.First(&to_update, "id = ?", body.ID)
+	if query.Error != nil {
+		log.Println("Error occurred during find: " + query.Error.Error())
+		return query.Error
+	}
+	if query.RowsAffected == 0 {
+		return errors.New("record not found in database")
+	}
+
+	if body.Handle != nil {
+		to_update.Handle = *body.Handle
+	}
+	if body.Username != nil {
+		to_update.Username = *body.Username
+	}
+	if body.Email != nil {
+		to_update.Email = *body.Email
+	}
+	to_update.UpdatedAt = time.Now()
+
+	result := Database.Save(&to_update)
+	if result.Error != nil {
+		log.Println("Error occurred during update: " + result.Error.Error())
+		return result.Error
+	}
+	return nil
+}
+
+func DeleteUserRecord(user_id string) error {
 	var record models.User
 	found := Database.Where("user_id = ?", user_id).First(&record)
 	if found.Error != nil {
 		log.Println("Error occurred during find: " + found.Error.Error())
-		return http.StatusInternalServerError, found.Error
+		return found.Error
 	}
 	if found.RowsAffected == 0 {
-		return http.StatusNotFound, errors.New("record not found in database")
+		return errors.New("record not found in database")
 	}
 
 	result := Database.Delete(&record)
 	if result.Error != nil {
 		log.Println("Error occurred during delete: " + result.Error.Error())
-		return http.StatusInternalServerError, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return http.StatusGone, errors.New("record already deleted")
+		return errors.New("record already deleted")
 	}
-	return http.StatusOK, nil
+	return nil
 }
 
 func WriteNewFollowingRecord(body *models.FollowUserRequest) (*models.Following, error) {

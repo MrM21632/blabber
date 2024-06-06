@@ -7,6 +7,13 @@ type CreateUserRequest struct {
 	Password string `json:"password"`
 }
 
+type UpdateUserRequest struct {
+	ID       string  `json:"user_id"`
+	Handle   *string `json:"handle"`
+	Username *string `json:"username"`
+	Email    *string `json:"email_address"`
+}
+
 type IndividualUserRequest struct {
 	ID string `json:"user_id"`
 }

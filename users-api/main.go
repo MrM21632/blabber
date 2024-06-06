@@ -28,7 +28,7 @@ func main() {
 	_ = UidGenNode // TODO: Remove once we're using this variable
 
 	PasswordParams := &users.Argon2idParams{
-		Memory:  64 * 1024,
+		Memory:  64 * 1024, // 64 MiB
 		Time:    3,
 		Threads: 2,
 		Saltlen: 16,
