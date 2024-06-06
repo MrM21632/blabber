@@ -101,6 +101,31 @@ func UpdateUserRecord(body *models.UpdateUserRequest) error {
 	return nil
 }
 
+func UpdatePasswordHashForUser(user_id, new_password string, params *Argon2idParams) error {
+	to_update := models.User{}
+	query := Database.First(&to_update, "id = ?", user_id)
+	if query.Error != nil {
+		log.Println("Error occurred during find: " + query.Error.Error())
+		return query.Error
+	}
+	if query.RowsAffected == 0 {
+		return errors.New("record not found in database")
+	}
+
+	password_hash, err := GenerateHash(new_password, params)
+	if err != nil {
+		return err
+	}
+	to_update.Password = password_hash
+
+	result := Database.Save(&to_update)
+	if result.Error != nil {
+		log.Println("Error occurred during password update: " + result.Error.Error())
+		return result.Error
+	}
+	return nil
+}
+
 func DeleteUserRecord(user_id string) error {
 	var record models.User
 	found := Database.Where("user_id = ?", user_id).First(&record)

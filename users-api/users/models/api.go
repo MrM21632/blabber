@@ -14,6 +14,11 @@ type UpdateUserRequest struct {
 	Email    *string `json:"email_address"`
 }
 
+type UpdateUserPasswordRequest struct {
+	ID       string `json:"user_id"`
+	Password string `json:"password"`
+}
+
 type IndividualUserRequest struct {
 	ID string `json:"user_id"`
 }
