@@ -3,7 +3,6 @@ package users
 import (
 	"errors"
 	"log"
-	"net/http"
 	"time"
 	"users/users/models"
 
@@ -222,7 +221,7 @@ func GetFollowsForUser(follower_id string) ([]models.UserFollowerEntity, error) 
 	return follows, nil
 }
 
-func DeleteFollowingRecord(follower_id, followed_id string) (int, error) {
+func DeleteFollowingRecord(follower_id, followed_id string) error {
 	var record models.Following
 	found := Database.
 		Where("user_following.follower_id = ?", follower_id).
@@ -230,19 +229,19 @@ func DeleteFollowingRecord(follower_id, followed_id string) (int, error) {
 		First(&record)
 	if found.Error != nil {
 		log.Println("Error occurred during find: " + found.Error.Error())
-		return http.StatusInternalServerError, found.Error
+		return found.Error
 	}
 	if found.RowsAffected == 0 {
-		return http.StatusNotFound, errors.New("record not found in database")
+		return errors.New("record not found in database")
 	}
 
 	result := Database.Delete(&record)
 	if result.Error != nil {
 		log.Println("Error occurred during delete: " + result.Error.Error())
-		return http.StatusInternalServerError, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return http.StatusGone, errors.New("record already deleted")
+		return errors.New("record already deleted")
 	}
-	return http.StatusOK, nil
+	return nil
 }
