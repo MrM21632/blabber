@@ -70,6 +70,20 @@ func GetUserRecord(user_id string) (*models.User, error) {
 	return &record, nil
 }
 
+func GetUserPasswordHash(user_id string) (*string, error) {
+	var record models.User
+	result := Database.Where("user.id = ?", user_id).First(&record)
+	if result.Error != nil {
+		log.Println("Error occurred during query: " + result.Error.Error())
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("record not found in database")
+	}
+
+	return &record.Password, nil
+}
+
 func UpdateUserRecord(body *models.UpdateUserRequest) error {
 	to_update := models.User{}
 	query := Database.First(&to_update, "id = ?", body.ID)
@@ -100,7 +114,7 @@ func UpdateUserRecord(body *models.UpdateUserRequest) error {
 	return nil
 }
 
-func UpdatePasswordHashForUser(user_id, new_password string, params *Argon2idParams) error {
+func UpdatePasswordHashForUser(user_id, new_password string) error {
 	to_update := models.User{}
 	query := Database.First(&to_update, "id = ?", user_id)
 	if query.Error != nil {
@@ -111,12 +125,7 @@ func UpdatePasswordHashForUser(user_id, new_password string, params *Argon2idPar
 		return errors.New("record not found in database")
 	}
 
-	password_hash, err := GenerateHash(new_password, params)
-	if err != nil {
-		return err
-	}
-	to_update.Password = password_hash
-
+	to_update.Password = new_password
 	result := Database.Save(&to_update)
 	if result.Error != nil {
 		log.Println("Error occurred during password update: " + result.Error.Error())
