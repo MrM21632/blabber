@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"posts/envvars"
 	"posts/middleware"
+	"posts/uidgen"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -18,6 +19,13 @@ func init() {
 
 func main() {
 	godotenv.Load()
+
+	UidGenNode, err := uidgen.InitializeNode()
+	if err != nil {
+		log.Error("Encountered error while initializing uidgen node: " + err.Error())
+		return
+	}
+	_ = UidGenNode // TODO: Remove once actually used
 
 	server_port, err := envvars.GetenvInteger("SERVER_PORT")
 	if err != nil {

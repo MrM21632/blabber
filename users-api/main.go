@@ -24,7 +24,7 @@ func main() {
 
 	UidGenNode, err := uidgen.InitializeNode()
 	if err != nil {
-		fmt.Printf("Encountered error while initializing uidgen node: %s", err.Error())
+		log.Error("Encountered error while initializing uidgen node: " + err.Error())
 		return
 	}
 	PasswordParams := &users.Argon2idParams{
