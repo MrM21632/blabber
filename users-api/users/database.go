@@ -2,10 +2,10 @@ package users
 
 import (
 	"errors"
-	"log"
 	"time"
 	"users/users/models"
 
+	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -46,7 +46,7 @@ func WriteNewUserRecord(
 	}
 	result := Database.Create(&new_record)
 	if result.Error != nil {
-		log.Println("Error occurred during user write: " + result.Error.Error())
+		log.Error("Error occurred during user write: " + result.Error.Error())
 		return nil, result.Error
 	}
 	if result.RowsAffected < 1 {
@@ -60,7 +60,7 @@ func GetUserRecord(user_id string) (*models.User, error) {
 	var record models.User
 	result := Database.Where("user.id = ?", user_id).First(&record)
 	if result.Error != nil {
-		log.Println("Error occurred during query: " + result.Error.Error())
+		log.Error("Error occurred during query: " + result.Error.Error())
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
@@ -74,7 +74,7 @@ func GetUserPasswordHash(user_id string) (*string, error) {
 	var record models.User
 	result := Database.Where("user.id = ?", user_id).First(&record)
 	if result.Error != nil {
-		log.Println("Error occurred during query: " + result.Error.Error())
+		log.Error("Error occurred during query: " + result.Error.Error())
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
@@ -88,7 +88,7 @@ func UpdateUserRecord(body *models.UpdateUserRequest) error {
 	to_update := models.User{}
 	query := Database.First(&to_update, "id = ?", body.ID)
 	if query.Error != nil {
-		log.Println("Error occurred during find: " + query.Error.Error())
+		log.Error("Error occurred during find: " + query.Error.Error())
 		return query.Error
 	}
 	if query.RowsAffected == 0 {
@@ -108,7 +108,7 @@ func UpdateUserRecord(body *models.UpdateUserRequest) error {
 
 	result := Database.Save(&to_update)
 	if result.Error != nil {
-		log.Println("Error occurred during update: " + result.Error.Error())
+		log.Error("Error occurred during update: " + result.Error.Error())
 		return result.Error
 	}
 	return nil
@@ -118,7 +118,7 @@ func UpdatePasswordHashForUser(user_id, new_password string) error {
 	to_update := models.User{}
 	query := Database.First(&to_update, "id = ?", user_id)
 	if query.Error != nil {
-		log.Println("Error occurred during find: " + query.Error.Error())
+		log.Error("Error occurred during find: " + query.Error.Error())
 		return query.Error
 	}
 	if query.RowsAffected == 0 {
@@ -128,7 +128,7 @@ func UpdatePasswordHashForUser(user_id, new_password string) error {
 	to_update.Password = new_password
 	result := Database.Save(&to_update)
 	if result.Error != nil {
-		log.Println("Error occurred during password update: " + result.Error.Error())
+		log.Error("Error occurred during password update: " + result.Error.Error())
 		return result.Error
 	}
 	return nil
@@ -138,7 +138,7 @@ func DeleteUserRecord(user_id string) error {
 	var record models.User
 	found := Database.Where("id = ?", user_id).First(&record)
 	if found.Error != nil {
-		log.Println("Error occurred during find: " + found.Error.Error())
+		log.Error("Error occurred during find: " + found.Error.Error())
 		return found.Error
 	}
 	if found.RowsAffected == 0 {
@@ -147,7 +147,7 @@ func DeleteUserRecord(user_id string) error {
 
 	result := Database.Delete(&record)
 	if result.Error != nil {
-		log.Println("Error occurred during delete: " + result.Error.Error())
+		log.Error("Error occurred during delete: " + result.Error.Error())
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
@@ -165,7 +165,7 @@ func WriteNewFollowingRecord(body *models.FollowUserRequest) (*models.Following,
 	}
 	result := Database.Create(&new_record)
 	if result.Error != nil {
-		log.Println("Error occurred during following write: " + result.Error.Error())
+		log.Error("Error occurred during following write: " + result.Error.Error())
 		return nil, result.Error
 	}
 	if result.RowsAffected < 1 {
@@ -182,7 +182,7 @@ func GetFollowingRecord(follower_id, followed_id string) (*models.Following, err
 		Where("user_following.followed_id = ?", followed_id).
 		First(&record)
 	if result.Error != nil {
-		log.Println("Error occurred during query: " + result.Error.Error())
+		log.Error("Error occurred during query: " + result.Error.Error())
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
@@ -201,7 +201,7 @@ func GetFollowersForUser(followed_id string) ([]models.UserFollowerEntity, error
 		Where("user_following.followed_id = ?", followed_id).
 		Scan(&followers)
 	if query.Error != nil {
-		log.Println("Error occurred during query: " + query.Error.Error())
+		log.Error("Error occurred during query: " + query.Error.Error())
 		return nil, query.Error
 	}
 	if query.RowsAffected == 0 {
@@ -220,7 +220,7 @@ func GetFollowsForUser(follower_id string) ([]models.UserFollowerEntity, error) 
 		Where("user_following.follower_id = ?", follower_id).
 		Scan(&follows)
 	if query.Error != nil {
-		log.Println("Error occurred during query: " + query.Error.Error())
+		log.Error("Error occurred during query: " + query.Error.Error())
 		return nil, query.Error
 	}
 	if query.RowsAffected == 0 {
@@ -237,7 +237,7 @@ func DeleteFollowingRecord(follower_id, followed_id string) error {
 		Where("user_following.followed_id = ?", followed_id).
 		First(&record)
 	if found.Error != nil {
-		log.Println("Error occurred during find: " + found.Error.Error())
+		log.Error("Error occurred during find: " + found.Error.Error())
 		return found.Error
 	}
 	if found.RowsAffected == 0 {
@@ -246,7 +246,7 @@ func DeleteFollowingRecord(follower_id, followed_id string) error {
 
 	result := Database.Delete(&record)
 	if result.Error != nil {
-		log.Println("Error occurred during delete: " + result.Error.Error())
+		log.Error("Error occurred during delete: " + result.Error.Error())
 		return result.Error
 	}
 	if result.RowsAffected == 0 {

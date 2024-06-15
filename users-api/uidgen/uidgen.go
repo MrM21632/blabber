@@ -2,11 +2,12 @@ package uidgen
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
 	"users/envvars"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -41,7 +42,7 @@ func GetEpoch() uint64 {
 	var epoch uint64
 	var err error
 	if epoch, err = envvars.GetenvInteger("UIDGEN_EPOCH_MS"); err != nil {
-		fmt.Println("get epoch failed: envvar UIDGEN_EPOCH_MS not found, using default")
+		log.Warn("get epoch failed: envvar UIDGEN_EPOCH_MS not found, using default")
 		return 1288834974657
 	}
 
@@ -56,7 +57,7 @@ func GetServerId() uint64 {
 	var serverId uint64
 	var err error
 	if serverId, err = envvars.GetenvInteger("UIDGEN_NODE_ID"); err != nil {
-		fmt.Println("get server id failed: envvar UIDGEN_NODE_ID not found, using default")
+		log.Warn("get server id failed: envvar UIDGEN_NODE_ID not found, using default")
 		return 0
 	}
 
@@ -65,7 +66,9 @@ func GetServerId() uint64 {
 
 func InitializeNode() (*UniqueIdGenerator, error) {
 	if SequenceLength+ServerIdLength+TimestampLength != 64 {
-		return nil, errors.New("initialization failed: combined length of sections is invalid")
+		err := errors.New("initialization failed: combined length of sections is invalid")
+		log.Error(err.Error())
+		return nil, err
 	}
 
 	serverId := GetServerId()
@@ -75,9 +78,11 @@ func InitializeNode() (*UniqueIdGenerator, error) {
 	result := UniqueIdGenerator{}
 	result.serverId = serverId
 	if result.serverId > uint64(MaxServerId) {
-		return nil, errors.New(
+		err := errors.New(
 			"initialization failed: server ID must between 0 and " + strconv.FormatInt(int64(MaxServerId), 10),
 		)
+		log.Error(err.Error())
+		return nil, err
 	}
 
 	now := time.Now()
