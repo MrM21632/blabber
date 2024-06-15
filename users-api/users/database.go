@@ -136,7 +136,7 @@ func UpdatePasswordHashForUser(user_id, new_password string) error {
 
 func DeleteUserRecord(user_id string) error {
 	var record models.User
-	found := Database.Where("user_id = ?", user_id).First(&record)
+	found := Database.Where("id = ?", user_id).First(&record)
 	if found.Error != nil {
 		log.Println("Error occurred during find: " + found.Error.Error())
 		return found.Error
@@ -197,7 +197,7 @@ func GetFollowersForUser(followed_id string) ([]models.UserFollowerEntity, error
 	query := Database.
 		Table("user").
 		Select("user.id, user.handle, user.username").
-		Joins("inner join user_following on users.id = user_following.follower_id").
+		Joins("inner join user_following on user.id = user_following.follower_id").
 		Where("user_following.followed_id = ?", followed_id).
 		Scan(&followers)
 	if query.Error != nil {
@@ -216,7 +216,7 @@ func GetFollowsForUser(follower_id string) ([]models.UserFollowerEntity, error) 
 	query := Database.
 		Table("user").
 		Select("user.id, user.handle, user.username").
-		Joins("inner join user_following on users.id = user_following.followed_id").
+		Joins("inner join user_following on user.id = user_following.followed_id").
 		Where("user_following.follower_id = ?", follower_id).
 		Scan(&follows)
 	if query.Error != nil {

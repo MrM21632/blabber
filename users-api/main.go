@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"net/http"
 	"users/envvars"
+	"users/middleware"
 	"users/uidgen"
 	"users/users"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.JSONFormatter{})
+}
 
 func main() {
 	godotenv.Load()
@@ -38,7 +45,9 @@ func main() {
 		server_port = 8080
 	}
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(middleware.LoggingMiddleware())
 	r.SetTrustedProxies(nil)
 
 	r.POST("/users", server.CreateUser)

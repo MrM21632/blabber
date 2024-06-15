@@ -147,14 +147,17 @@ func (u UserServer) UpdatePassword(context *gin.Context) {
 	match, err := ComparePasswordToHash(input.OldPassword, *curr_password)
 	if !match {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		return
 	}
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{})
+		return
 	}
 
 	new_hash, err := GenerateHash(input.NewPassword, u.PassParams)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{})
+		return
 	}
 	if err := UpdatePasswordHashForUser(input.ID, new_hash); err != nil {
 		if strings.Contains(err.Error(), "record not found") {
