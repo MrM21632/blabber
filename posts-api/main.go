@@ -38,6 +38,18 @@ func main() {
 	r.Use(middleware.LoggingMiddleware())
 	r.SetTrustedProxies(nil)
 
+	r.POST("/posts")
+	r.GET("/posts")
+	r.GET("/posts/replies")
+	r.GET("/posts/reposts")
+	r.DELETE("/posts")
+
+	r.GET("/feed")
+
+	r.POST("/reply")
+	r.POST("/like")
+	r.POST("/repost")
+
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "message": "Endpoint not found"})
 	})
