@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"fmt"
 	"net/http"
 	"posts/posts/models"
 	"posts/uidgen"
@@ -32,6 +33,45 @@ func (p PostsServer) CreatePost(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"post": *result})
+}
+
+// POST /reply
+func (p PostsServer) ReplyToPost(context *gin.Context) {
+	var input models.CreatePostRequest
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if input.ParentID == nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Reply has no associated parent post"})
+		return
+	}
+
+	var exists bool
+	err := Database.Model(&models.Post{}).Select("count(*) > 0").Where("post.id = ?", input.ParentID).Find(&exists).Error
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{})
+		return
+	}
+	if !exists {
+		context.JSON(
+			http.StatusUnprocessableEntity,
+			gin.H{"error": fmt.Sprintf("Post %s not found", *input.ParentID)},
+		)
+		return
+	}
+
+	new_post_id := p.UidGenNode.GeanerateId()
+	result, err := WriteNewPostRecord(
+		strconv.FormatUint(uint64(new_post_id), 10),
+		&input,
+	)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{})
+		return
+	}
+	context.JSON(http.StatusCreated, gin.H{"reply": *result})
 }
 
 // GET /posts (individual posts only)

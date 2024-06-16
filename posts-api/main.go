@@ -50,7 +50,7 @@ func main() {
 
 	r.GET("/feed")
 
-	r.POST("/reply")
+	r.POST("/reply", server.ReplyToPost)
 	r.POST("/like")
 	r.POST("/repost")
 
