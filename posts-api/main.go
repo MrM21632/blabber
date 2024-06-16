@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"posts/envvars"
 	"posts/middleware"
+	"posts/posts"
 	"posts/uidgen"
 
 	"github.com/gin-gonic/gin"
@@ -19,13 +20,16 @@ func init() {
 
 func main() {
 	godotenv.Load()
+	posts.ConnectToDatabase()
 
 	UidGenNode, err := uidgen.InitializeNode()
 	if err != nil {
 		log.Error("Encountered error while initializing uidgen node: " + err.Error())
 		return
 	}
-	_ = UidGenNode // TODO: Remove once actually used
+	server := posts.PostsServer{
+		UidGenNode: UidGenNode,
+	}
 
 	server_port, err := envvars.GetenvInteger("SERVER_PORT")
 	if err != nil {
@@ -38,7 +42,7 @@ func main() {
 	r.Use(middleware.LoggingMiddleware())
 	r.SetTrustedProxies(nil)
 
-	r.POST("/posts")
+	r.POST("/posts", server.CreatePost)
 	r.GET("/posts")
 	r.GET("/posts/replies")
 	r.GET("/posts/reposts")
