@@ -43,7 +43,7 @@ func main() {
 	r.SetTrustedProxies(nil)
 
 	r.POST("/posts", server.CreatePost)
-	r.GET("/posts")
+	r.GET("/posts", server.GetPost)
 	r.GET("/posts/replies")
 	r.GET("/posts/reposts")
 	r.DELETE("/posts")

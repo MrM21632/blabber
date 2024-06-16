@@ -47,3 +47,20 @@ func WriteNewPostRecord(
 
 	return &new_record, nil
 }
+
+func GetPostRecord(post_id string) (*models.Post, error) {
+	var record models.Post
+	result := Database.
+		Omit("Replies").
+		Where("post.id = ?", post_id).
+		First(&record)
+	if result.Error != nil {
+		log.Error("Error occurred during query: " + result.Error.Error())
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("record not found in database")
+	}
+
+	return &record, nil
+}

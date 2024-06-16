@@ -5,6 +5,7 @@ import (
 	"posts/posts/models"
 	"posts/uidgen"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,4 +32,25 @@ func (p PostsServer) CreatePost(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"post": *result})
+}
+
+// GET /posts (individual posts only)
+func (p PostsServer) GetPost(context *gin.Context) {
+	var input models.IndividualPostRequest
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := GetPostRecord(input.ID)
+	if err != nil {
+		if strings.Contains(err.Error(), "record not found") {
+			context.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		context.JSON(http.StatusInternalServerError, gin.H{})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"post": *result})
 }
