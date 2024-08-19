@@ -13,7 +13,18 @@ async fn main() {
         .max_connections(10)
         .connect(&config.database_url)
         .await
-        .unwrap();
+        .expect("Error establishing database connection");
+    
+    sqlx::migrate!()
+        .run(&database)
+        .await
+        .expect("Migration failed");
 
-    let _ = sqlx::migrate!().run(&database).await.unwrap();
+    let row: (i64,) = sqlx::query_as("SELECT $1")
+        .bind(150_i64)
+        .fetch_one(&database)
+        .await
+        .expect("Error running test query");
+
+    println!("Got: {:?}", row.0);
 }
