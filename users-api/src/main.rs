@@ -1,3 +1,4 @@
+use axum::{routing::get, Router};
 use clap::Parser;
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
@@ -20,11 +21,8 @@ async fn main() {
         .await
         .expect("Migration failed");
 
-    let row: (i64,) = sqlx::query_as("SELECT $1")
-        .bind(150_i64)
-        .fetch_one(&database)
-        .await
-        .expect("Error running test query");
+    let app = Router::new().route("/hello", get(|| async { "Hello, world!" }));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
-    println!("Got: {:?}", row.0);
+    axum::serve(listener, app).await.unwrap();
 }
