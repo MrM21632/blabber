@@ -120,3 +120,6 @@ where
         })
     }
 }
+
+/// Custom result type to simplify capturing our custom error type
+pub type Result<T, E = Error> = std::result::Result<T, E>;

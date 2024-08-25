@@ -67,7 +67,7 @@ fn create_router(context: config::ApiContext) -> Router {
         .with_state(context)
 }
 
-async fn serve(config: Config, database: PgPool) {
+async fn serve(config: Config, database: PgPool) -> anyhow::Result<()> {
     let context = config::ApiContext {
         config: Arc::new(config),
         database,
@@ -80,11 +80,10 @@ async fn serve(config: Config, database: PgPool) {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .context("Error occurred starting HTTP server")
-        .unwrap();
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
     let config = Config::parse();
 
@@ -96,8 +95,9 @@ async fn main() {
     
     sqlx::migrate!()
         .run(&database)
-        .await
-        .expect("Migration failed");
+        .await?;
 
-    serve(config, database).await;
+    serve(config, database).await?;
+
+    Ok(())
 }
