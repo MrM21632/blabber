@@ -1,6 +1,10 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use axum::{http::{header::WWW_AUTHENTICATE, StatusCode}, response::IntoResponse, Json};
+use axum::{
+    http::{header::WWW_AUTHENTICATE, StatusCode},
+    response::IntoResponse,
+    Json,
+};
 use tracing::error;
 
 /// Common error type which can be used across the API for error handling needs.
@@ -78,7 +82,8 @@ impl IntoResponse for Error {
                     self.status_code(),
                     [(WWW_AUTHENTICATE, "Token")],
                     self.to_string(),
-                ).into_response();
+                )
+                    .into_response();
             }
             Self::SqlxError(ref e) => {
                 error!("{}", format!("Database error occurred: {:?}", e));
@@ -99,7 +104,7 @@ pub trait ResultExt<T> {
     fn on_failed_constraint(
         self,
         name: &str,
-        f: impl FnOnce(Box<dyn sqlx::error::DatabaseError>) -> Error
+        f: impl FnOnce(Box<dyn sqlx::error::DatabaseError>) -> Error,
     ) -> Result<T, Error>;
 }
 
@@ -110,7 +115,7 @@ where
     fn on_failed_constraint(
         self,
         name: &str,
-        map_err: impl FnOnce(Box<dyn sqlx::error::DatabaseError>) -> Error
+        map_err: impl FnOnce(Box<dyn sqlx::error::DatabaseError>) -> Error,
     ) -> Result<T, Error> {
         self.map_err(|e| match e.into() {
             Error::SqlxError(sqlx::Error::Database(dbe)) if dbe.constraint() == Some(name) => {

@@ -1,23 +1,30 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
-use axum::{extract::MatchedPath, http::{header::AUTHORIZATION, Request}, routing::get, Router};
+use axum::{
+    extract::MatchedPath,
+    http::{header::AUTHORIZATION, Request},
+    routing::get,
+    Router,
+};
 use clap::Parser;
-use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use tower_http::{catch_panic::CatchPanicLayer, sensitive_headers::SetSensitiveHeadersLayer, timeout::TimeoutLayer, trace::TraceLayer};
+use tower_http::{
+    catch_panic::CatchPanicLayer, sensitive_headers::SetSensitiveHeadersLayer,
+    timeout::TimeoutLayer, trace::TraceLayer,
+};
 use tracing::{info_span, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
-mod config;
-mod error;
-mod passwords;
+mod util;
 
 async fn shutdown_signal() {
     use tokio::signal;
 
     let ctrl_c = async {
-        signal::ctrl_c().await.expect("Failed to install Ctrl+C handler");
+        signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
     };
 
     #[cfg(unix)]
@@ -37,30 +44,30 @@ async fn shutdown_signal() {
     }
 }
 
-fn create_router(context: config::ApiContext) -> Router {
+fn create_router(context: util::config::ApiContext) -> Router {
     tracing_subscriber::registry()
         .with(
             EnvFilter::builder()
                 .with_default_directive(LevelFilter::ERROR.into())
-                .from_env_lossy()
+                .from_env_lossy(),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
     Router::new()
         .route("/hello", get(|| async { "Hello, world!" }))
         .layer((
-            TraceLayer::new_for_http()
-                .make_span_with(|req: &Request<_>| {
-                    let matched_path = req.extensions()
-                        .get::<MatchedPath>()
-                        .map(MatchedPath::as_str);
+            TraceLayer::new_for_http().make_span_with(|req: &Request<_>| {
+                let matched_path = req
+                    .extensions()
+                    .get::<MatchedPath>()
+                    .map(MatchedPath::as_str);
 
-                    info_span!(
-                        "http_request",
-                        method = ?req.method(),
-                        matched_path,
-                    )
-                }),
+                info_span!(
+                    "http_request",
+                    method = ?req.method(),
+                    matched_path,
+                )
+            }),
             SetSensitiveHeadersLayer::new([AUTHORIZATION]),
             TimeoutLayer::new(Duration::from_secs(30)),
             CatchPanicLayer::new(),
@@ -68,8 +75,8 @@ fn create_router(context: config::ApiContext) -> Router {
         .with_state(context)
 }
 
-async fn serve(config: Config, database: PgPool) -> anyhow::Result<()> {
-    let context = config::ApiContext {
+async fn serve(config: util::config::Config, database: PgPool) -> anyhow::Result<()> {
+    let context = util::config::ApiContext {
         config: Arc::new(config),
         database,
     };
@@ -86,17 +93,15 @@ async fn serve(config: Config, database: PgPool) -> anyhow::Result<()> {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
-    let config = Config::parse();
+    let config = util::config::Config::parse();
 
     let database = PgPoolOptions::new()
         .max_connections(10)
         .connect(&config.database_url)
         .await
         .expect("Error establishing database connection");
-    
-    sqlx::migrate!()
-        .run(&database)
-        .await?;
+
+    sqlx::migrate!().run(&database).await?;
 
     serve(config, database).await?;
 

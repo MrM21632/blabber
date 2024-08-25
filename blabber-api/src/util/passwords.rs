@@ -1,9 +1,10 @@
 use anyhow::Context;
 use argon2::{
-    password_hash::{rand_core::OsRng, SaltString}, Algorithm, Argon2, Params, PasswordHash, Version
+    password_hash::{rand_core::OsRng, SaltString},
+    Algorithm, Argon2, Params, PasswordHash, Version,
 };
 
-use crate::error::{Error, Result};
+use crate::util::error::{Error, Result};
 
 fn create_argon2_context() -> Argon2<'static> {
     Argon2::new(
@@ -34,10 +35,10 @@ pub async fn verify_password(password: String, password_hash: String) -> Result<
             .map_err(|e| anyhow::anyhow!("Invalid password hash: {}", e))?;
 
         hash.verify_password(&[&create_argon2_context()], password)
-        .map_err(|e| match e {
-            argon2::password_hash::Error::Password => Error::Unauthorized,
-            _ => anyhow::anyhow!("Failed to verify password hash: {}", e).into(),
-        })
+            .map_err(|e| match e {
+                argon2::password_hash::Error::Password => Error::Unauthorized,
+                _ => anyhow::anyhow!("Failed to verify password hash: {}", e).into(),
+            })
     })
     .await
     .context("Panic occurred verifying password hash")?
