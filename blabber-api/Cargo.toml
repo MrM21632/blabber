@@ -11,8 +11,13 @@ authors = [
 # Core dependencies: REST framework, runtimes, database connections
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["full"] }
 sqlx = {version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono"]}
 serde ={ version = "1", features = ["derive"] }
+
+# Logging support
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Error handling
 anyhow = "1"

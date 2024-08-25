@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use axum::{http::{header::WWW_AUTHENTICATE, StatusCode}, response::IntoResponse, Json};
+use tracing::error;
 
 /// Common error type which can be used across the API for error handling needs.
 #[derive(thiserror::Error, Debug)]
@@ -80,12 +81,10 @@ impl IntoResponse for Error {
                 ).into_response();
             }
             Self::SqlxError(ref e) => {
-                // TODO: Add tracing as a dependency
-                // tracing::span!(format!("Database error occurred: {:?}", e));
+                error!("{}", format!("Database error occurred: {:?}", e));
             }
             Self::InternalError(ref e) => {
-                // TODO: Add tracing as a dependency
-                // tracing::span!(format!("Internal error occurred: {:?}", e));
+                error!("{}", format!("Internal error occurred: {:?}", e));
             }
 
             _ => (),

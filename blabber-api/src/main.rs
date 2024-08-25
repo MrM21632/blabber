@@ -1,10 +1,13 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
-use axum::{routing::get, Router};
+use axum::{extract::MatchedPath, http::{header::AUTHORIZATION, Request}, routing::get, Router};
 use clap::Parser;
 use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use tower_http::{catch_panic::CatchPanicLayer, sensitive_headers::SetSensitiveHeadersLayer, timeout::TimeoutLayer, trace::TraceLayer};
+use tracing::{info_span, level_filters::LevelFilter};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 mod config;
 mod error;
@@ -34,9 +37,33 @@ async fn shutdown_signal() {
 }
 
 fn create_router(context: config::ApiContext) -> Router {
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::ERROR.into())
+                .from_env_lossy()
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
     Router::new()
         .route("/hello", get(|| async { "Hello, world!" }))
-        // TODO: Add middleware layers: Sensitive headers, tracing, timeouts, catching panics
+        .layer((
+            TraceLayer::new_for_http()
+                .make_span_with(|req: &Request<_>| {
+                    let matched_path = req.extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str);
+
+                    info_span!(
+                        "http_request",
+                        method = ?req.method(),
+                        matched_path,
+                    )
+                }),
+            SetSensitiveHeadersLayer::new([AUTHORIZATION]),
+            TimeoutLayer::new(Duration::from_secs(30)),
+            CatchPanicLayer::new(),
+        ))
         .with_state(context)
 }
 
