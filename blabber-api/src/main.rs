@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilte
 
 mod config;
 mod error;
+mod passwords;
 
 async fn shutdown_signal() {
     use tokio::signal;
