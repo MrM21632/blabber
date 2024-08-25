@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
+use anyhow::Context;
 use axum::{routing::get, Router};
 use clap::Parser;
 use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 mod config;
-mod database;
+mod error;
 
 async fn shutdown_signal() {
     use tokio::signal;
@@ -51,6 +52,7 @@ async fn serve(config: Config, database: PgPool) {
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
+        .context("Error occurred starting HTTP server")
         .unwrap();
 }
 
