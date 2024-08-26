@@ -34,4 +34,4 @@ argon2 = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 
 # UUID support
-uuid ={ version = "1", features = ["v4", "v7", "js", "macro-diagnostics"] }
+uuid ={ version = "1", features = ["v4", "v7", "js", "macro-diagnostics", "serde"] }

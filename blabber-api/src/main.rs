@@ -17,6 +17,7 @@ use tracing::{info_span, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 mod util;
+mod models;
 
 async fn shutdown_signal() {
     use tokio::signal;
