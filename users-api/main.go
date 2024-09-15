@@ -34,6 +34,7 @@ func main() {
 		return
 	}
 
+	// Be sure to include ?search_path=blabber in the database URL
 	config, err := pgxpool.ParseConfig(utils.GetDatabaseURL())
 	if err != nil {
 		log.Error("encountered error while parsing config string: ", err.Error())

@@ -19,10 +19,18 @@ type User struct {
 	Follows      uint32    `db:"follows"`
 }
 
+func (User) TableName() string {
+	return "user"
+}
+
 type UserFollow struct {
 	FollowerID uuid.UUID `db:"follower_id"`
 	FollowedID uuid.UUID `db:"followed_id"`
 	CreatedAt  time.Time `db:"created_at"`
+}
+
+func (UserFollow) TableName() string {
+	return "user_follow"
 }
 
 type UserBlock struct {
@@ -31,8 +39,16 @@ type UserBlock struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
+func (UserBlock) TableName() string {
+	return "user_block"
+}
+
 type UserMute struct {
 	MuterID   uuid.UUID `db:"muter_id"`
 	MutedID   uuid.UUID `db:"muted_id"`
 	CreatedAt time.Time `db:"created_at"`
+}
+
+func (UserMute) TableName() string {
+	return "user_mute"
 }
