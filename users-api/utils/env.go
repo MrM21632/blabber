@@ -42,41 +42,6 @@ func GetenvInteger(key string) (uint64, error) {
 	return result, nil
 }
 
-// GetUidgenEpoch retrieves the user UID generation epoch from environment.
-//
-// Epoch is configurable using the UIDGEN_EPOCH_MS environment variable. This allows for quick,
-// reconfigurable deployemnts, especially when scale is required.
-//
-// If the epoch is not found, we default to the epoch used by Twitter's original Snowflake
-// algorithm.
-func GetUidgenEpoch() uint64 {
-	var epoch uint64
-	var err error
-	if epoch, err = GetenvInteger("UIDGEN_EPOCH_MS"); err != nil {
-		log.Warn("get uidgen epoch failed: envvar UIDGEN_EPOCH_MS not found, using default")
-		return SnowflakeEpoch
-	}
-
-	return epoch
-}
-
-// GetUidgenServerID retrieves the user UID generation server ID from environment.
-//
-// Server ID is configurable using the UIDGEN_NODE_ID environment variable. This allows for quick,
-// reconfigurable deployments, especially when scale is required.
-//
-// If the server ID is not found, we default to 0.
-func GetUidgenServerID() uint64 {
-	var server_id uint64
-	var err error
-	if server_id, err = GetenvInteger("UIDGEN_NODE_ID"); err != nil {
-		log.Warn("get uidgen server id failed: envvar UIDGEN_NODE_ID not found, using default")
-		return DefaultServerID
-	}
-
-	return server_id
-}
-
 // GetServerPort retrieves the main server port from environment.
 //
 // Server port is configurable using the SERVER_PORT environment variable. This allows for quick,

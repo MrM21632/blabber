@@ -28,12 +28,6 @@ func main() {
 
 	password_params := utils.GetArgon2IDConfig()
 
-	uid_generator, err := utils.InitializeNode()
-	if err != nil {
-		log.Error("encountered error while initializing uidgen node: " + err.Error())
-		return
-	}
-
 	// Be sure to include ?search_path=blabber in the database URL
 	config, err := pgxpool.ParseConfig(utils.GetDatabaseURL())
 	if err != nil {
@@ -52,7 +46,6 @@ func main() {
 	defer pool.Close()
 
 	server := api.UserServer{
-		UIDGenerator: uid_generator,
 		Argon2Params: &password_params,
 		DatabasePool: pool,
 	}
