@@ -51,8 +51,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	// TODO: actually name this variable when used
-	_ = api.UserServer{
+	server := api.UserServer{
 		UIDGenerator: uid_generator,
 		Argon2Params: &password_params,
 		DatabasePool: pool,
@@ -63,6 +62,30 @@ func main() {
 	r.Use(middleware.LoggingMiddleware())
 	r.SetTrustedProxies(nil)
 
+	// GET endpoints
+	r.GET("/users", server.GetUser)
+	r.GET("/users/followers", server.GetFollowers)
+	r.GET("/users/follows", server.GetFollows)
+	r.GET("/users/blocks", server.GetBlocks)
+	r.GET("/users/mutes", server.GetMutes)
+
+	// POST endpoints
+	r.POST("/users", server.CreateUser)
+	r.POST("/users/follow", server.FollowUser)
+	r.POST("/users/block", server.BlockUser)
+	r.POST("/users/mute", server.MuteUser)
+
+	// PUT and PATCH endpoints
+	r.PATCH("/users", server.UpdateUser)
+	r.PATCH("/users/password", server.UpdatePassword)
+
+	// DELETE endpoints
+	r.DELETE("/users", server.DeleteUser)
+	r.DELETE("/users/follow", server.UnfollowUser)
+	r.DELETE("/users/block", server.UnblockUser)
+	r.DELETE("/users/mute", server.UnmuteUser)
+
+	// Invalid routes
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "message": "endpoint not found"})
 	})
