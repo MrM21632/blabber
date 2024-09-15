@@ -10,7 +10,7 @@ type User struct {
 	ID           uuid.UUID `db:"id"`
 	Username     string    `db:"username"`
 	UserHandle   string    `db:"user_handle"`
-	UserBio      string    `db:"user_bio"`
+	Bio          string    `db:"user_bio"`
 	Email        string    `db:"email"`
 	PasswordHash string    `db:"password_hash"`
 	CreatedAt    time.Time `db:"created_at"`
