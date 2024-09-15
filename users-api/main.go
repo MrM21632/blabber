@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"users-api/api"
 	"users-api/middleware"
 	"users-api/utils"
 
@@ -25,6 +26,11 @@ func main() {
 	if err != nil {
 		log.Error("encountered error while initializing uidgen node: " + err.Error())
 		return
+	}
+	// TODO: actually name this variable when used
+	_ = api.UserServer{
+		UIDGenerator: UIDGenerator,
+		Argon2Params: &PasswordParams,
 	}
 
 	r := gin.New()
