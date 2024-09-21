@@ -1,8 +1,10 @@
 package api
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
-	"time"
+	"strings"
 	"users-api/models"
 	"users-api/utils"
 
@@ -27,13 +29,6 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		return
 	}
 
-	var bio_text string
-	if input.Bio == nil {
-		bio_text = ""
-	} else {
-		bio_text = *input.Bio
-	}
-
 	var new_user_id uuid.UUID
 	if new_user_id, err = uuid.NewV7(); err != nil {
 		context.JSON(
@@ -52,34 +47,25 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		return
 	}
 
-	query_string := `
-	INSERT INTO blabber.user (
-		id, username, user_handle, user_bio, email, password_hash, created_at, updated_at,
-		followers, follows
-	) VALUES (
-		@id, @username, @handle, @bio, @email, @hash, @createdAt, @updatedAt, @followers,
-		@follows
-	);
-	`
-	query_args := pgx.NamedArgs{
-		"id":        new_user_id,
-		"username":  input.Username,
-		"handle":    input.Handle,
-		"bio":       bio_text,
-		"email":     input.Email,
-		"hash":      password_hash,
-		"createdAt": time.Now(),
-		"updatedAt": time.Now(),
-		"followers": 0,
-		"follows":   0,
-	}
-
-	_, err = u.DatabasePool.Exec(context, query_string, query_args)
+	_, err = WriteNewUserRecord(
+		context,
+		u.DatabasePool,
+		input,
+		password_hash,
+		new_user_id,
+	)
 	if err != nil {
-		context.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "error occurred writing new user record: " + err.Error()},
-		)
+		if strings.Contains(err.Error(), "violates unique constraint") {
+			context.JSON(
+				http.StatusConflict,
+				gin.H{"error": fmt.Sprintf("received violative entity: %s", err.Error())},
+			)
+		} else {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+			)
+		}
 		return
 	}
 
@@ -99,35 +85,25 @@ func (u UserServer) GetUser(context *gin.Context) {
 		return
 	}
 
-	query_string := `
-	SELECT * FROM blabber.user
-	WHERE id = @id;
-	`
-	query_args := pgx.NamedArgs{
-		"id": input.ID,
-	}
-	row, err := u.DatabasePool.Query(context, query_string, query_args)
+	user, err := RetrieveUserRecord(context, u.DatabasePool, input)
 	if err != nil {
-		context.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "error occurred retrieving user record: " + err.Error()},
-		)
-		return
-	}
-	defer row.Close()
-
-	user, err := pgx.CollectOneRow(row, pgx.RowToStructByName[models.User])
-	if err != nil {
-		context.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": "error occurred retrieving user record: " + err.Error()},
-		)
+		if errors.Is(err, pgx.ErrNoRows) {
+			context.JSON(
+				http.StatusNotFound,
+				gin.H{"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error())},
+			)
+		} else {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+			)
+		}
 		return
 	}
 
 	context.JSON(
 		http.StatusOK,
-		gin.H{"user": user},
+		gin.H{"user": *user},
 	)
 }
 

@@ -25,6 +25,6 @@ func LoggingMiddleware() gin.HandlerFunc {
 			"status_code": status,
 			"latency":     latency,
 			"client_ip":   client,
-		}).Info("Incoming Request")
+		}).Info("processed incoming request")
 	}
 }
