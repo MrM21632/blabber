@@ -140,10 +140,48 @@ func (u UserServer) GetFollows(context *gin.Context) {
 }
 
 // GET /users/blocks
-func (u UserServer) GetBlocks(context *gin.Context) {}
+func (u UserServer) GetBlocks(context *gin.Context) {
+	var err error
+
+	var input models.IndividualUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users, err := RetrieveBlockRecordsForUser(context, u.DatabasePool, input)
+	if err != nil {
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+		)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"blocks": users})
+}
 
 // GET /users/mutes
-func (u UserServer) GetMutes(context *gin.Context) {}
+func (u UserServer) GetMutes(context *gin.Context) {
+	var err error
+
+	var input models.IndividualUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users, err := RetrieveMuteRecordsForUser(context, u.DatabasePool, input)
+	if err != nil {
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+		)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"mutes": users})
+}
 
 // PATCH /users
 func (u UserServer) UpdateUser(context *gin.Context) {}

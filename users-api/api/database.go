@@ -142,3 +142,69 @@ func RetrieveFollowRecordsForUser(
 
 	return users, nil
 }
+
+func RetrieveBlockRecordsForUser(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.IndividualUserRequest,
+) ([]models.PartialUser, error) {
+	query_string := `
+	SELECT
+		u.id,
+		u.user_handle,
+		u.username
+	FROM blabber.user u
+	INNER JOIN blabber.user_block uf
+		ON uf.blocker_id = @id
+		AND uf.blocked_id = u.id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": input.ID,
+	}
+
+	row, err := pool.Query(context, query_string, query_args)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	users, err := pgx.CollectRows(row, pgx.RowToStructByName[models.PartialUser])
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func RetrieveMuteRecordsForUser(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.IndividualUserRequest,
+) ([]models.PartialUser, error) {
+	query_string := `
+	SELECT
+		u.id,
+		u.user_handle,
+		u.username
+	FROM blabber.user u
+	INNER JOIN blabber.user_mute uf
+		ON uf.muter_id = @id
+		AND uf.muted_id = u.id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": input.ID,
+	}
+
+	row, err := pool.Query(context, query_string, query_args)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	users, err := pgx.CollectRows(row, pgx.RowToStructByName[models.PartialUser])
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
