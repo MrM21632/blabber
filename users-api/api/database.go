@@ -77,6 +77,62 @@ func RetrieveUserRecord(
 	return &user, nil
 }
 
+func UpdateUserRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.UpdateUserRequest,
+	user models.User,
+) (pgconn.CommandTag, error) {
+	var username string
+	if input.Bio == nil {
+		username = user.Username
+	} else {
+		username = *input.Username
+	}
+
+	var handle string
+	if input.Bio == nil {
+		handle = user.Handle
+	} else {
+		handle = *input.Handle
+	}
+
+	var email string
+	if input.Bio == nil {
+		email = user.Email
+	} else {
+		email = *input.Email
+	}
+
+	var bio_text string
+	if input.Bio == nil {
+		bio_text = user.Bio
+	} else {
+		bio_text = *input.Bio
+	}
+
+	query_string := `
+	UPDATE blabber.user
+	SET
+		username = @username,
+		user_handle = @handle,
+		email = @email,
+		user_bio = @bio,
+		updated_at = @updated_at
+	WHERE id = @id;
+	`
+	query_args := pgx.NamedArgs{
+		"id":         input.ID,
+		"username":   username,
+		"handle":     handle,
+		"email":      email,
+		"bio":        bio_text,
+		"updated_at": time.Now(),
+	}
+
+	return pool.Exec(context, query_string, query_args)
+}
+
 func RetrieveUserPassword(
 	context *gin.Context,
 	pool *pgxpool.Pool,

@@ -184,7 +184,38 @@ func (u UserServer) GetMutes(context *gin.Context) {
 }
 
 // PATCH /users
-func (u UserServer) UpdateUser(context *gin.Context) {}
+func (u UserServer) UpdateUser(context *gin.Context) {
+	var err error
+
+	var input models.UpdateUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := RetrieveUserRecord(context, u.DatabasePool, models.IndividualUserRequest{ID: input.ID})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			context.JSON(
+				http.StatusNotFound,
+				gin.H{"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error())},
+			)
+		} else {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+			)
+		}
+		return
+	}
+
+	if _, err = UpdateUserRecord(context, u.DatabasePool, input, *user); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // PATCH /users/password
 func (u UserServer) UpdatePassword(context *gin.Context) {
