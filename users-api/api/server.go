@@ -268,7 +268,22 @@ func (u UserServer) UpdatePassword(context *gin.Context) {
 }
 
 // DELETE /users
-func (u UserServer) DeleteUser(context *gin.Context) {}
+func (u UserServer) DeleteUser(context *gin.Context) {
+	var err error
+
+	var input models.IndividualUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if _, err := DeleteUserRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // POST /users/follow
 func (u UserServer) FollowUser(context *gin.Context) {}

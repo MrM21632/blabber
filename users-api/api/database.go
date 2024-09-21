@@ -133,6 +133,22 @@ func UpdateUserRecord(
 	return pool.Exec(context, query_string, query_args)
 }
 
+func DeleteUserRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.IndividualUserRequest,
+) (pgconn.CommandTag, error) {
+	query_string := `
+	DELETE FROM blabber.user
+	WHERE id = @id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": input.ID,
+	}
+
+	return pool.Exec(context, query_string, query_args)
+}
+
 func RetrieveUserPassword(
 	context *gin.Context,
 	pool *pgxpool.Pool,
