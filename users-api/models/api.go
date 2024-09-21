@@ -7,7 +7,7 @@ type CreateUserRequest struct {
 	Handle   string  `json:"handle"`
 	Email    string  `json:"email"`
 	Password string  `json:"password"`
-	Bio      *string `json:"user_bio"`
+	Bio      *string `json:"user_bio,omitempty"`
 }
 
 type IndividualUserRequest struct {
@@ -16,10 +16,10 @@ type IndividualUserRequest struct {
 
 type UpdateUserRequest struct {
 	ID       uuid.UUID `json:"user_id"`
-	Username *string   `json:"username"`
-	Handle   *string   `json:"handle"`
-	Email    *string   `json:"email"`
-	Bio      *string   `json:"user_bio"`
+	Username *string   `json:"username,omitempty"`
+	Handle   *string   `json:"handle,omitempty"`
+	Email    *string   `json:"email,omitempty"`
+	Bio      *string   `json:"user_bio,omitempty"`
 }
 
 type UpdateUserPasswordRequest struct {

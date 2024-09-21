@@ -27,6 +27,13 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		return
 	}
 
+	var bio_text string
+	if input.Bio == nil {
+		bio_text = ""
+	} else {
+		bio_text = *input.Bio
+	}
+
 	var new_user_id uuid.UUID
 	if new_user_id, err = uuid.NewV7(); err != nil {
 		context.JSON(
@@ -58,7 +65,7 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		"id":        new_user_id,
 		"username":  input.Username,
 		"handle":    input.Handle,
-		"bio":       *input.Bio,
+		"bio":       bio_text,
 		"email":     input.Email,
 		"hash":      password_hash,
 		"createdAt": time.Now(),
