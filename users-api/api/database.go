@@ -77,6 +77,50 @@ func RetrieveUserRecord(
 	return &user, nil
 }
 
+func RetrieveUserPassword(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	user_id uuid.UUID,
+) (*string, error) {
+	query_string := `
+	SELECT password_hash FROM blabber.user
+	WHERE id = @id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": user_id,
+	}
+
+	var password_hash string
+	err := pool.QueryRow(context, query_string, query_args).Scan(&password_hash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &password_hash, nil
+}
+
+func UpdateUserPassword(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	user_id uuid.UUID,
+	new_password_hash string,
+) (pgconn.CommandTag, error) {
+	query_string := `
+	UPDATE blabber.user
+	SET
+		password_hash = @password,
+		updated_at = @updated_at
+	WHERE id = @id;
+	`
+	query_args := pgx.NamedArgs{
+		"id":         user_id,
+		"password":   new_password_hash,
+		"updated_at": time.Now(),
+	}
+
+	return pool.Exec(context, query_string, query_args)
+}
+
 func RetrieveFollowerRecordsForUser(
 	context *gin.Context,
 	pool *pgxpool.Pool,

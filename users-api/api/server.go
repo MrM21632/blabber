@@ -187,7 +187,54 @@ func (u UserServer) GetMutes(context *gin.Context) {
 func (u UserServer) UpdateUser(context *gin.Context) {}
 
 // PATCH /users/password
-func (u UserServer) UpdatePassword(context *gin.Context) {}
+func (u UserServer) UpdatePassword(context *gin.Context) {
+	var err error
+
+	var input models.UpdateUserPasswordRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	curr_hash, err := RetrieveUserPassword(context, u.DatabasePool, input.ID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			context.JSON(
+				http.StatusNotFound,
+				gin.H{"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error())},
+			)
+		} else {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+			)
+		}
+		return
+	}
+
+	match, err := utils.ComparePasswordToHash(input.OldPassword, *curr_hash)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !match {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
+		return
+	}
+
+	new_hash, err := utils.GenerateHash(input.NewPassword, u.Argon2Params)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if _, err := UpdateUserPassword(context, u.DatabasePool, input.ID, new_hash); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // DELETE /users
 func (u UserServer) DeleteUser(context *gin.Context) {}
