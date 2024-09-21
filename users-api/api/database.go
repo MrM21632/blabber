@@ -76,3 +76,69 @@ func RetrieveUserRecord(
 
 	return &user, nil
 }
+
+func RetrieveFollowerRecordsForUser(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.IndividualUserRequest,
+) ([]models.PartialUser, error) {
+	query_string := `
+	SELECT
+		u.id,
+		u.user_handle,
+		u.username
+	FROM blabber.user u
+	INNER JOIN blabber.user_follow uf
+		ON uf.followed_id = @id
+		AND uf.follower_id = u.id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": input.ID,
+	}
+
+	row, err := pool.Query(context, query_string, query_args)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	users, err := pgx.CollectRows(row, pgx.RowToStructByName[models.PartialUser])
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func RetrieveFollowRecordsForUser(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.IndividualUserRequest,
+) ([]models.PartialUser, error) {
+	query_string := `
+	SELECT
+		u.id,
+		u.user_handle,
+		u.username
+	FROM blabber.user u
+	INNER JOIN blabber.user_follow uf
+		ON uf.follower_id = @id
+		AND uf.followed_id = u.id;
+	`
+	query_args := pgx.NamedArgs{
+		"id": input.ID,
+	}
+
+	row, err := pool.Query(context, query_string, query_args)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	users, err := pgx.CollectRows(row, pgx.RowToStructByName[models.PartialUser])
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

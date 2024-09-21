@@ -44,7 +44,7 @@ type MutesRequest struct {
 }
 
 type PartialUser struct {
-	ID       uuid.UUID `json:"user_id"`
-	Handle   string    `json:"handle"`
-	Username string    `json:"username"`
+	ID       uuid.UUID `db:"id" json:"user_id"`
+	Handle   string    `db:"user_handle" json:"handle"`
+	Username string    `db:"username" json:"username"`
 }

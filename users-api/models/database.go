@@ -9,9 +9,9 @@ import (
 type User struct {
 	ID           uuid.UUID `db:"id" json:"user_id"`
 	Username     string    `db:"username" json:"username"`
-	Handle       string    `db:"user_handle" json:"user_handle"`
+	Handle       string    `db:"user_handle" json:"handle"`
 	Bio          string    `db:"user_bio" json:"user_bio"`
-	Email        string    `db:"email" json:"email_address"`
+	Email        string    `db:"email" json:"email"`
 	PasswordHash string    `db:"password_hash" json:"password_hash"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`

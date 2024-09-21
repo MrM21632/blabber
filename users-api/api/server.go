@@ -47,13 +47,7 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		return
 	}
 
-	_, err = WriteNewUserRecord(
-		context,
-		u.DatabasePool,
-		input,
-		password_hash,
-		new_user_id,
-	)
+	_, err = WriteNewUserRecord(context, u.DatabasePool, input, password_hash, new_user_id)
 	if err != nil {
 		if strings.Contains(err.Error(), "violates unique constraint") {
 			context.JSON(
@@ -69,10 +63,7 @@ func (u UserServer) CreateUser(context *gin.Context) {
 		return
 	}
 
-	context.JSON(
-		http.StatusCreated,
-		gin.H{"user_id": new_user_id},
-	)
+	context.JSON(http.StatusCreated, gin.H{"user_id": new_user_id})
 }
 
 // GET /users
@@ -101,17 +92,52 @@ func (u UserServer) GetUser(context *gin.Context) {
 		return
 	}
 
-	context.JSON(
-		http.StatusOK,
-		gin.H{"user": *user},
-	)
+	context.JSON(http.StatusOK, gin.H{"user": *user})
 }
 
 // GET /users/followers
-func (u UserServer) GetFollowers(context *gin.Context) {}
+func (u UserServer) GetFollowers(context *gin.Context) {
+	var err error
+
+	var input models.IndividualUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users, err := RetrieveFollowerRecordsForUser(context, u.DatabasePool, input)
+	if err != nil {
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+		)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"followers": users})
+}
 
 // GET /users/follows
-func (u UserServer) GetFollows(context *gin.Context) {}
+func (u UserServer) GetFollows(context *gin.Context) {
+	var err error
+
+	var input models.IndividualUserRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users, err := RetrieveFollowRecordsForUser(context, u.DatabasePool, input)
+	if err != nil {
+		context.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": fmt.Sprintf("unexpected error occurred: %s", err.Error())},
+		)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"follows": users})
+}
 
 // GET /users/blocks
 func (u UserServer) GetBlocks(context *gin.Context) {}
