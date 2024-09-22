@@ -286,10 +286,40 @@ func (u UserServer) DeleteUser(context *gin.Context) {
 }
 
 // POST /users/follow
-func (u UserServer) FollowUser(context *gin.Context) {}
+func (u UserServer) FollowUser(context *gin.Context) {
+	var err error
+
+	var input models.FollowersRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := CreateNewFollowingRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusCreated, gin.H{})
+}
 
 // DELETE /users/follow
-func (u UserServer) UnfollowUser(context *gin.Context) {}
+func (u UserServer) UnfollowUser(context *gin.Context) {
+	var err error
+
+	var input models.FollowersRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := DeleteFollowingRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // POST /users/block
 func (u UserServer) BlockUser(context *gin.Context) {}

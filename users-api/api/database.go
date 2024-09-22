@@ -324,3 +324,108 @@ func RetrieveMuteRecordsForUser(
 
 	return users, nil
 }
+
+func CreateNewFollowingRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.FollowersRequest,
+) error {
+	// Create following record
+	create_record_string := `
+	INSERT INTO blabber.user_follow (
+		follower_id, followed_id, created_at
+	) VALUES (
+		@follower, @followed, @created_at
+	);
+	`
+	create_record_args := pgx.NamedArgs{
+		"follower":   input.FollowerID,
+		"followed":   input.FollowedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, create_record_string, create_record_args)
+	if err != nil {
+		return err
+	}
+
+	// Increment follower count for followed_id
+	increment_followers_string := `
+	UPDATE blabber.user
+	SET followers = followers + 1
+	WHERE id = @followed;
+	`
+	increment_followers_args := pgx.NamedArgs{
+		"followed": input.FollowedID,
+	}
+	_, err = pool.Exec(context, increment_followers_string, increment_followers_args)
+	if err != nil {
+		return err
+	}
+
+	// Increment follow count for follower_id
+	increment_follows_string := `
+	UPDATE blabber.user
+	SET follows = follows + 1
+	WHERE id = @follower;
+	`
+	increment_follows_args := pgx.NamedArgs{
+		"follower": input.FollowerID,
+	}
+	_, err = pool.Exec(context, increment_follows_string, increment_follows_args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteFollowingRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.FollowersRequest,
+) error {
+	// Delete following record
+	delete_record_string := `
+	DELETE FROM blabber.user_follow
+	WHERE follower_id = @follower AND followed_id = @followed;
+	`
+	delete_record_args := pgx.NamedArgs{
+		"follower":   input.FollowerID,
+		"followed":   input.FollowedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, delete_record_string, delete_record_args)
+	if err != nil {
+		return err
+	}
+
+	// Decrement follower count for followed_id
+	decrement_followers_string := `
+	UPDATE blabber.user
+	SET followers = GREATEST(followers - 1, 0)
+	WHERE id = @followed;
+	`
+	decrement_followers_args := pgx.NamedArgs{
+		"followed": input.FollowedID,
+	}
+	_, err = pool.Exec(context, decrement_followers_string, decrement_followers_args)
+	if err != nil {
+		return err
+	}
+
+	// Decrement follow count for follower_id
+	decrement_follows_string := `
+	UPDATE blabber.user
+	SET follows = GREATEST(follows - 1, 0)
+	WHERE id = @follower;
+	`
+	decrement_follows_args := pgx.NamedArgs{
+		"follower": input.FollowerID,
+	}
+	_, err = pool.Exec(context, decrement_follows_string, decrement_follows_args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
