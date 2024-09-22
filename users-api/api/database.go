@@ -429,3 +429,97 @@ func DeleteFollowingRecord(
 
 	return nil
 }
+
+func CreateNewBlockRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.BlocksRequest,
+) error {
+	// Create block record
+	create_record_string := `
+	INSERT INTO blabber.user_block (
+		blocker_id, blocked_id, created_at
+	) VALUES (
+		@blocker, @blocked, @created_at
+	);
+	`
+	create_record_args := pgx.NamedArgs{
+		"blocker":    input.BlockerID,
+		"blocked":    input.BlockedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, create_record_string, create_record_args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteBlockRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.BlocksRequest,
+) error {
+	// Delete block record
+	delete_record_string := `
+	DELETE FROM blabber.user_block
+	WHERE blocker_id = @blocker AND blocked_id = @blocked;
+	`
+	delete_record_args := pgx.NamedArgs{
+		"blocker":    input.BlockerID,
+		"blocked":    input.BlockedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, delete_record_string, delete_record_args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateNewMuteRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.MutesRequest,
+) error {
+	// Create mute record
+	create_record_string := `
+	INSERT INTO blabber.user_mute (
+		muter_id, muted_id, created_at
+	) VALUES (
+		@muter, @muted, @created_at
+	);
+	`
+	create_record_args := pgx.NamedArgs{
+		"muter":      input.MuterID,
+		"muted":      input.MutedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, create_record_string, create_record_args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteMuteRecord(
+	context *gin.Context,
+	pool *pgxpool.Pool,
+	input models.MutesRequest,
+) error {
+	// Delete block record
+	delete_record_string := `
+	DELETE FROM blabber.user_mute
+	WHERE muter_id = @muter AND muted_id = @muted;
+	`
+	delete_record_args := pgx.NamedArgs{
+		"muter":      input.MuterID,
+		"muted":      input.MutedID,
+		"created_at": time.Now(),
+	}
+	_, err := pool.Exec(context, delete_record_string, delete_record_args)
+	if err != nil {
+		return err
+	}
+	return nil
+}

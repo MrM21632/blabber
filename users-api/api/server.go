@@ -322,13 +322,73 @@ func (u UserServer) UnfollowUser(context *gin.Context) {
 }
 
 // POST /users/block
-func (u UserServer) BlockUser(context *gin.Context) {}
+func (u UserServer) BlockUser(context *gin.Context) {
+	var err error
+
+	var input models.BlocksRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := CreateNewBlockRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // DELETE /users/block
-func (u UserServer) UnblockUser(context *gin.Context) {}
+func (u UserServer) UnblockUser(context *gin.Context) {
+	var err error
+
+	var input models.BlocksRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := DeleteBlockRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // POST /users/mute
-func (u UserServer) MuteUser(context *gin.Context) {}
+func (u UserServer) MuteUser(context *gin.Context) {
+	var err error
+
+	var input models.MutesRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := CreateNewMuteRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
 
 // DELETE /users/mute
-func (u UserServer) UnmuteUser(context *gin.Context) {}
+func (u UserServer) UnmuteUser(context *gin.Context) {
+	var err error
+
+	var input models.MutesRequest
+	if err = context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := DeleteMuteRecord(context, u.DatabasePool, input); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusNoContent, gin.H{})
+}
