@@ -27,11 +27,11 @@ func WriteNewUserRecord(
 
 	query_string := `
 	INSERT INTO blabber.user (
-		id, username, user_handle, user_bio, email, password_hash, created_at, updated_at,
-		followers, follows
+	    id, username, user_handle, user_bio, email, password_hash, created_at, updated_at,
+	    followers, follows
 	) VALUES (
-		@id, @username, @handle, @bio, @email, @hash, @createdAt, @updatedAt, @followers,
-		@follows
+	    @id, @username, @handle, @bio, @email, @hash, @createdAt, @updatedAt, @followers,
+	    @follows
 	);
 	`
 	query_args := pgx.NamedArgs{
@@ -114,11 +114,11 @@ func UpdateUserRecord(
 	query_string := `
 	UPDATE blabber.user
 	SET
-		username = @username,
-		user_handle = @handle,
-		email = @email,
-		user_bio = @bio,
-		updated_at = @updated_at
+	    username = @username,
+	    user_handle = @handle,
+	    email = @email,
+	    user_bio = @bio,
+	    updated_at = @updated_at
 	WHERE id = @id;
 	`
 	query_args := pgx.NamedArgs{
@@ -180,8 +180,8 @@ func UpdateUserPassword(
 	query_string := `
 	UPDATE blabber.user
 	SET
-		password_hash = @password,
-		updated_at = @updated_at
+	    password_hash = @password,
+	    updated_at = @updated_at
 	WHERE id = @id;
 	`
 	query_args := pgx.NamedArgs{
@@ -200,13 +200,12 @@ func RetrieveFollowerRecordsForUser(
 ) ([]models.PartialUser, error) {
 	query_string := `
 	SELECT
-		u.id,
-		u.user_handle,
-		u.username
+	    u.id,
+	    u.user_handle,
+	    u.username
 	FROM blabber.user u
 	INNER JOIN blabber.user_follow uf
-		ON uf.followed_id = @id
-		AND uf.follower_id = u.id;
+	    ON uf.followed_id = @id AND uf.follower_id = u.id;
 	`
 	query_args := pgx.NamedArgs{
 		"id": input.ID,
@@ -233,13 +232,12 @@ func RetrieveFollowRecordsForUser(
 ) ([]models.PartialUser, error) {
 	query_string := `
 	SELECT
-		u.id,
-		u.user_handle,
-		u.username
+	    u.id,
+	    u.user_handle,
+	    u.username
 	FROM blabber.user u
 	INNER JOIN blabber.user_follow uf
-		ON uf.follower_id = @id
-		AND uf.followed_id = u.id;
+	    ON uf.follower_id = @id AND uf.followed_id = u.id;
 	`
 	query_args := pgx.NamedArgs{
 		"id": input.ID,
@@ -266,13 +264,12 @@ func RetrieveBlockRecordsForUser(
 ) ([]models.PartialUser, error) {
 	query_string := `
 	SELECT
-		u.id,
-		u.user_handle,
-		u.username
+	    u.id,
+	    u.user_handle,
+	    u.username
 	FROM blabber.user u
 	INNER JOIN blabber.user_block uf
-		ON uf.blocker_id = @id
-		AND uf.blocked_id = u.id;
+	    ON uf.blocker_id = @id AND uf.blocked_id = u.id;
 	`
 	query_args := pgx.NamedArgs{
 		"id": input.ID,
@@ -299,13 +296,12 @@ func RetrieveMuteRecordsForUser(
 ) ([]models.PartialUser, error) {
 	query_string := `
 	SELECT
-		u.id,
-		u.user_handle,
-		u.username
+	    u.id,
+	    u.user_handle,
+	    u.username
 	FROM blabber.user u
 	INNER JOIN blabber.user_mute uf
-		ON uf.muter_id = @id
-		AND uf.muted_id = u.id;
+	    ON uf.muter_id = @id AND uf.muted_id = u.id;
 	`
 	query_args := pgx.NamedArgs{
 		"id": input.ID,
@@ -333,9 +329,9 @@ func CreateNewFollowingRecord(
 	// Create following record
 	create_record_string := `
 	INSERT INTO blabber.user_follow (
-		follower_id, followed_id, created_at
+	    follower_id, followed_id, created_at
 	) VALUES (
-		@follower, @followed, @created_at
+	    @follower, @followed, @created_at
 	);
 	`
 	create_record_args := pgx.NamedArgs{
@@ -438,9 +434,9 @@ func CreateNewBlockRecord(
 	// Create block record
 	create_record_string := `
 	INSERT INTO blabber.user_block (
-		blocker_id, blocked_id, created_at
+	    blocker_id, blocked_id, created_at
 	) VALUES (
-		@blocker, @blocked, @created_at
+	    @blocker, @blocked, @created_at
 	);
 	`
 	create_record_args := pgx.NamedArgs{
@@ -485,9 +481,9 @@ func CreateNewMuteRecord(
 	// Create mute record
 	create_record_string := `
 	INSERT INTO blabber.user_mute (
-		muter_id, muted_id, created_at
+	    muter_id, muted_id, created_at
 	) VALUES (
-		@muter, @muted, @created_at
+	    @muter, @muted, @created_at
 	);
 	`
 	create_record_args := pgx.NamedArgs{
