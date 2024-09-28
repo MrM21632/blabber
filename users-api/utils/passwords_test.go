@@ -1,8 +1,15 @@
 package utils
 
-import "testing"
+import (
+	"io"
+	"testing"
+
+	log "github.com/sirupsen/logrus"
+)
 
 func TestComparePasswordToHash(t *testing.T) {
+	log.SetOutput(io.Discard)
+
 	var tests = []struct {
 		name     string
 		password string
@@ -54,7 +61,9 @@ func TestComparePasswordToHash(t *testing.T) {
 	}
 }
 
-func BenchmarkGenerateHash(b *testing.B) {
+func BenchmarkGenerateHashDefaultParams(b *testing.B) {
+	log.SetOutput(io.Discard)
+
 	// Default params, suits our purposes here
 	params := GetArgon2IDConfig()
 	password := "password"
@@ -65,6 +74,8 @@ func BenchmarkGenerateHash(b *testing.B) {
 }
 
 func BenchmarkGenerateHashCustomParams(b *testing.B) {
+	log.SetOutput(io.Discard)
+
 	// Custom params as used in the deployed app
 	b.Setenv("ARGON2_MEMSIZE", "65536")
 	b.Setenv("ARGON2_ITERATIONS", "3")
