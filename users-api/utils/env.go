@@ -9,8 +9,6 @@ import (
 )
 
 const (
-	SnowflakeEpoch    uint64 = 1288834974657
-	DefaultServerID   uint64 = 0
 	DefaultServerPort uint64 = 8080
 )
 
