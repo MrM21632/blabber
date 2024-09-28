@@ -90,3 +90,13 @@ func BenchmarkGenerateHashCustomParams(b *testing.B) {
 		GenerateHash(password, &params)
 	}
 }
+
+func FuzzGenerateHash(f *testing.F) {
+	log.SetOutput(io.Discard)
+
+	params := GetArgon2IDConfig()
+	f.Add("password")
+	f.Fuzz(func(t *testing.T, s string) {
+		GenerateHash(s, &params)
+	})
+}
