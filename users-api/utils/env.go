@@ -12,7 +12,7 @@ const (
 	DefaultServerPort uint64 = 8080
 )
 
-func getenvStr(key string) (string, error) {
+func GetenvStr(key string) (string, error) {
 	result := os.Getenv(key)
 	if result == "" {
 		return result, fmt.Errorf(
@@ -27,7 +27,7 @@ func getenvStr(key string) (string, error) {
 // GetenvInteger retrieves an integer value from environment.
 // Returns an error if the environment variable is not found.
 func GetenvInteger(key string) (uint64, error) {
-	str, err := getenvStr(key)
+	str, err := GetenvStr(key)
 	if err != nil {
 		return 0, err
 	}
@@ -66,7 +66,7 @@ func GetServerPort() uint64 {
 func GetDatabaseURL() string {
 	var database_url string
 	var err error
-	if database_url, err = getenvStr("DATABASE_URL"); err != nil {
+	if database_url, err = GetenvStr("DATABASE_URL"); err != nil {
 		log.Error("get database url failed: envvar DATABASE_URL not found, cannot continue")
 		panic("failed to get database connection details")
 	}
