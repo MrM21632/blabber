@@ -164,5 +164,5 @@ func ComparePasswordToHash(password, encoded string) (match bool, err error) {
 	if subtle.ConstantTimeCompare(hash, other_hash) == 1 {
 		return true, nil
 	}
-	return false, nil
+	return false, errors.New("password does not match encoding")
 }

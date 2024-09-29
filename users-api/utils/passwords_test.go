@@ -2,14 +2,85 @@ package utils
 
 import (
 	"io"
+	"reflect"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func TestComparePasswordToHash(t *testing.T) {
+func TestDecodeHash(t *testing.T) {
 	log.SetOutput(io.Discard)
 
+	var tests = []struct {
+		name       string
+		encoded    string
+		wantParams *Argon2IDParams
+		wantSalt   []byte
+		wantHash   []byte
+		wantErr    bool
+	}{
+		{
+			"Successful Decoding",
+			"$argon2id$v=19$m=19456,t=2,p=1$OUhHc1FMODFzZ0VLZkU1NQ$RukCwGtr0IOQx0Cfg1D01yXGlMRXu8yQhR+WHznLjvw",
+			&Argon2IDParams{19 * 1024, 2, 1, 16, 32},
+			[]byte("9HGsQL81sgEKfE55"),
+			[]byte{
+				0x46, 0xe9, 0x02, 0xc0, 0x6b, 0x6b, 0xd0, 0x83,
+				0x90, 0xc7, 0x40, 0x9f, 0x83, 0x50, 0xf4, 0xd7,
+				0x25, 0xc6, 0x94, 0xc4, 0x57, 0xbb, 0xcc, 0x90,
+				0x85, 0x1f, 0x96, 0x1f, 0x39, 0xcb, 0x8e, 0xfc,
+			},
+			false,
+		},
+		{
+			"Unsuccessful Decoding",
+			"$argon2id$v=19$m=abcd,t=2,p=1$OUhHc1FMODFzZ0VLZkU1NQ$RukCwGtr0IOQx0Cfg1D01yXGlMRXu8yQhR+WHznLjvw",
+			nil,
+			nil,
+			nil,
+			true,
+		},
+		{
+			"Invalid Hash",
+			"$argon2id$v=19$m=19456,t=2,p=1$foo=bar$OUhHc1FMODFzZ0VLZkU1NQ$RukCwGtr0IOQx0Cfg1D01yXGlMRXu8yQhR+WHznLjvw",
+			nil,
+			nil,
+			nil,
+			true,
+		},
+		{
+			"Wrong Argon2id Algorithm Version",
+			"$argon2id$v=20$m=19456,t=2,p=1$OUhHc1FMODFzZ0VLZkU1NQ$RukCwGtr0IOQx0Cfg1D01yXGlMRXu8yQhR+WHznLjvw",
+			nil,
+			nil,
+			nil,
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, salt, hash, err := DecodeHash(tt.encoded)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DecodeHash() error = %v, want = %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(salt, tt.wantSalt) {
+				t.Errorf("DecodeHash() salt = %v, want = %v", salt, tt.wantSalt)
+				return
+			}
+			if !reflect.DeepEqual(hash, tt.wantHash) {
+				t.Errorf("DecodeHash() hash = %v, want = %v", hash, tt.wantHash)
+				return
+			}
+			if !reflect.DeepEqual(params, tt.wantParams) {
+				t.Errorf("DecodeHash() params = %v, want = %v", params, tt.wantParams)
+			}
+		})
+	}
+}
+
+func TestComparePasswordToHash(t *testing.T) {
 	var tests = []struct {
 		name     string
 		password string
@@ -29,17 +100,17 @@ func TestComparePasswordToHash(t *testing.T) {
 			"password",
 			"$argon2id$v=19$m=19,t=2,p=1$QlhvM1pxaHJLR1RUaXM0bw$ERaaEm2foHNh7xLPQ3x8bg",
 			false,
-			false,
+			true,
 		},
 		{
-			"Invalid Hash Error",
+			"Invalid Hash",
 			"password",
 			"$argon2id$foo$v=19$m=19,t=2,p=1$dndOSlBlcDlzT3BuUlZDYw$EUpSlQrPa/BG2Ee3MJOXpg",
 			false,
 			true,
 		},
 		{
-			"Invalid Argon2id Algorithm Version",
+			"Wrong Argon2id Algorithm Version",
 			"password",
 			"$argon2id$v=18$m=19,t=2,p=1$dndOSlBlcDlzT3BuUlZDYw$EUpSlQrPa/BG2Ee3MJOXpg",
 			false,
