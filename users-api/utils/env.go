@@ -10,8 +10,11 @@ import (
 
 const (
 	DefaultServerPort uint64 = 8080
+	DefaultLifespan   uint64 = 1
 )
 
+// GetenvStr retrieves a string value from environment.
+// Returns an error if the environment variable is not found.
 func GetenvStr(key string) (string, error) {
 	result := os.Getenv(key)
 	if result == "" {
@@ -72,4 +75,38 @@ func GetDatabaseURL() string {
 	}
 
 	return database_url
+}
+
+// GetJWTSecret retrieves the JWT signing secret key from environment.
+//
+// JWT secret key is configurable using the DATABASE_URL environment variable. This allows for quick,
+// reconfigurable deployments, especially when scale is required.
+//
+// If the secret is not found, the program panics.
+func GetJWTSecret() string {
+	var jwt_secret string
+	var err error
+	if jwt_secret, err = GetenvStr("JWT_SECRET"); err != nil {
+		log.Error("get JWT secret failed: envvar JWT_SECRET not found, cannot continue")
+		panic("failed to get JWT secret")
+	}
+
+	return jwt_secret
+}
+
+// GetJWTLifespan retrieves the JWT lifespan, in hours, from environment.
+//
+// JWT lifespan is configurable using the JWT_LIFESPAN_HOURS environment variable. This allows for
+// quick, reconfigurable deployments, especially when scale is required.
+//
+// If the lifespan is not found, we default to 1 hour.
+func GetJWTLifespan() uint64 {
+	var lifespan uint64
+	var err error
+	if lifespan, err = GetenvInteger("JWT_LIFESPAN_HOURS"); err != nil {
+		log.Warn("get JWT lifespan failed: envvar JWT_LIFESPAN_HOURS not found, using default")
+		return DefaultLifespan
+	}
+
+	return lifespan
 }
