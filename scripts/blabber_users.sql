@@ -4,6 +4,7 @@ delete from blabber.user_follow;
 delete from blabber.user_block;
 delete from blabber.user_mute;
 
+
 -- Insert user account records
 insert into blabber.user
     (id, username, user_handle, user_bio, email, password_hash, created_at, updated_at, followers, follows)
