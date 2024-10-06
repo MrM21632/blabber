@@ -1,4 +1,5 @@
-# Uncomment if the database also doesn't exist
+# Uncomment if the database and user also don't exist
+# createuser --interactive blabber
 # createdb -U blabber blabber
 
 # Create database schema and tables
