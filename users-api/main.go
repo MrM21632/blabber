@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"users/envvars"
-	"users/middleware"
-	"users/uidgen"
-	"users/users"
+	"users-api/api"
+	"users-api/middleware"
+	"users-api/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+	pgx_uuid "github.com/vgarvardt/pgx-google-uuid/v5"
 )
 
 func init() {
@@ -20,29 +23,31 @@ func init() {
 
 func main() {
 	godotenv.Load()
-	users.ConnectToDatabase()
 
-	UidGenNode, err := uidgen.InitializeNode()
+	server_port := utils.GetServerPort()
+
+	password_params := utils.GetArgon2IDConfig()
+
+	// Be sure to include ?search_path=blabber in the database URL
+	config, err := pgxpool.ParseConfig(utils.GetDatabaseURL())
 	if err != nil {
-		log.Error("Encountered error while initializing uidgen node: " + err.Error())
+		log.Error("encountered error while parsing config string: ", err.Error())
 		return
 	}
-	PasswordParams := &users.Argon2idParams{
-		Memory:  64 * 1024, // 64 MiB
-		Time:    3,
-		Threads: 2,
-		Saltlen: 16,
-		Hashlen: 32,
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		pgx_uuid.Register(conn.TypeMap())
+		return nil
 	}
-	server := users.UserServer{
-		UidGenNode: UidGenNode,
-		PassParams: PasswordParams,
-	}
-
-	server_port, err := envvars.GetenvInteger("SERVER_PORT")
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		fmt.Printf("Encountered error when retrieving server port, setting to default: %s", err.Error())
-		server_port = 8080
+		log.Error("encountered error while creating connection pool: " + err.Error())
+		return
+	}
+	defer pool.Close()
+
+	server := api.UserServer{
+		Argon2Params: &password_params,
+		DatabasePool: pool,
 	}
 
 	r := gin.New()
@@ -50,19 +55,32 @@ func main() {
 	r.Use(middleware.LoggingMiddleware())
 	r.SetTrustedProxies(nil)
 
-	r.POST("/users", server.CreateUser)
+	// GET endpoints
 	r.GET("/users", server.GetUser)
 	r.GET("/users/followers", server.GetFollowers)
 	r.GET("/users/follows", server.GetFollows)
+	r.GET("/users/blocks", server.GetBlocks)
+	r.GET("/users/mutes", server.GetMutes)
+
+	// POST endpoints
+	r.POST("/users", server.CreateUser)
+	r.POST("/users/follow", server.FollowUser)
+	r.POST("/users/block", server.BlockUser)
+	r.POST("/users/mute", server.MuteUser)
+
+	// PUT and PATCH endpoints
 	r.PATCH("/users", server.UpdateUser)
 	r.PATCH("/users/password", server.UpdatePassword)
+
+	// DELETE endpoints
 	r.DELETE("/users", server.DeleteUser)
+	r.DELETE("/users/follow", server.UnfollowUser)
+	r.DELETE("/users/block", server.UnblockUser)
+	r.DELETE("/users/mute", server.UnmuteUser)
 
-	r.POST("/follow", server.FollowUser)
-	r.DELETE("/follow", server.UnfollowUser)
-
+	// Invalid routes
 	r.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "message": "Endpoint not found"})
+		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "message": "endpoint not found"})
 	})
 
 	r.Run(fmt.Sprintf(":%d", server_port))

@@ -450,4 +450,8 @@ sketch
 .history
 .ionide
 
+# Old source code
+posts-api-old/
+users-api-old/
+
 # End of https://www.toptal.com/developers/gitignore/api/go,flask,python,visualstudiocode,node,react
