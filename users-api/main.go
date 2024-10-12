@@ -31,8 +31,7 @@ func main() {
 	// Be sure to include ?search_path=blabber in the database URL
 	config, err := pgxpool.ParseConfig(utils.GetDatabaseURL())
 	if err != nil {
-		log.Error("encountered error while parsing config string: ", err.Error())
-		return
+		log.Fatal("encountered error while parsing config string: ", err.Error())
 	}
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		pgx_uuid.Register(conn.TypeMap())
@@ -40,8 +39,7 @@ func main() {
 	}
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		log.Error("encountered error while creating connection pool: " + err.Error())
-		return
+		log.Fatal("encountered error while creating connection pool: " + err.Error())
 	}
 	defer pool.Close()
 
@@ -80,7 +78,7 @@ func main() {
 
 	// Invalid routes
 	r.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "message": "endpoint not found"})
+		c.JSON(http.StatusNotFound, gin.H{"code": "ENDPOINT_NOT_FOUND", "error": ""})
 	})
 
 	r.Run(fmt.Sprintf(":%d", server_port))
