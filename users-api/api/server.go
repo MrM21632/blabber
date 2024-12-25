@@ -75,6 +75,10 @@ func (u UserServer) GetUser(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
+		return
+	}
 
 	user, err := RetrieveUserRecord(context, u.DatabasePool, input)
 	if err != nil {
@@ -83,7 +87,7 @@ func (u UserServer) GetUser(context *gin.Context) {
 				http.StatusNotFound,
 				gin.H{
 					"code":  "ENTITY_NOT_FOUND",
-					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error()),
+					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.UUID.String(), err.Error()),
 				},
 			)
 		} else {
@@ -105,6 +109,10 @@ func (u UserServer) GetFollowers(context *gin.Context) {
 	var input models.IndividualUserRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
 		return
 	}
 
@@ -129,6 +137,10 @@ func (u UserServer) GetFollows(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
+		return
+	}
 
 	users, err := RetrieveFollowRecordsForUser(context, u.DatabasePool, input)
 	if err != nil {
@@ -149,6 +161,10 @@ func (u UserServer) GetBlocks(context *gin.Context) {
 	var input models.IndividualUserRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
 		return
 	}
 
@@ -173,6 +189,10 @@ func (u UserServer) GetMutes(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
+		return
+	}
 
 	users, err := RetrieveMuteRecordsForUser(context, u.DatabasePool, input)
 	if err != nil {
@@ -195,6 +215,10 @@ func (u UserServer) UpdateUser(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
+		return
+	}
 
 	user, err := RetrieveUserRecord(context, u.DatabasePool, models.IndividualUserRequest{ID: input.ID})
 	if err != nil {
@@ -203,7 +227,7 @@ func (u UserServer) UpdateUser(context *gin.Context) {
 				http.StatusNotFound,
 				gin.H{
 					"code":  "ENTITY_NOT_FOUND",
-					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error()),
+					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.UUID.String(), err.Error()),
 				},
 			)
 		} else {
@@ -232,15 +256,19 @@ func (u UserServer) UpdatePassword(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
+		return
+	}
 
-	curr_hash, err := RetrieveUserPassword(context, u.DatabasePool, input.ID)
+	curr_hash, err := RetrieveUserPassword(context, u.DatabasePool, input.ID.UUID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			context.JSON(
 				http.StatusNotFound,
 				gin.H{
 					"code":  "ENTITY_NOT_FOUND",
-					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.String(), err.Error()),
+					"error": fmt.Sprintf("user entity with id=%s not found: %s", input.ID.UUID.String(), err.Error()),
 				},
 			)
 		} else {
@@ -274,7 +302,7 @@ func (u UserServer) UpdatePassword(context *gin.Context) {
 		return
 	}
 
-	if _, err := UpdateUserPassword(context, u.DatabasePool, input.ID, new_hash); err != nil {
+	if _, err := UpdateUserPassword(context, u.DatabasePool, input.ID.UUID, new_hash); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"code": "DB_ERROR", "error": err.Error()})
 		return
 	}
@@ -289,6 +317,10 @@ func (u UserServer) DeleteUser(context *gin.Context) {
 	var input models.IndividualUserRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.ID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "user_id not provided"})
 		return
 	}
 
@@ -309,6 +341,14 @@ func (u UserServer) FollowUser(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.FollowedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "followed_id not provided"})
+		return
+	}
+	if !input.FollowerID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "follower_id not provided"})
+		return
+	}
 
 	if err := CreateNewFollowingRecord(context, u.DatabasePool, input); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"code": "DB_ERROR", "error": err.Error()})
@@ -325,6 +365,14 @@ func (u UserServer) UnfollowUser(context *gin.Context) {
 	var input models.FollowersRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.FollowedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "followed_id not provided"})
+		return
+	}
+	if !input.FollowerID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "follower_id not provided"})
 		return
 	}
 
@@ -345,6 +393,14 @@ func (u UserServer) BlockUser(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.BlockedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "blocked_id not provided"})
+		return
+	}
+	if !input.BlockerID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "blocker_id not provided"})
+		return
+	}
 
 	if err := CreateNewBlockRecord(context, u.DatabasePool, input); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"code": "DB_ERROR", "error": err.Error()})
@@ -361,6 +417,14 @@ func (u UserServer) UnblockUser(context *gin.Context) {
 	var input models.BlocksRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.BlockedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "blocked_id not provided"})
+		return
+	}
+	if !input.BlockerID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "blocker_id not provided"})
 		return
 	}
 
@@ -381,6 +445,14 @@ func (u UserServer) MuteUser(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
 		return
 	}
+	if !input.MutedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "muted_id not provided"})
+		return
+	}
+	if !input.MuterID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "muter_id not provided"})
+		return
+	}
 
 	if err := CreateNewMuteRecord(context, u.DatabasePool, input); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"code": "DB_ERROR", "error": err.Error()})
@@ -397,6 +469,14 @@ func (u UserServer) UnmuteUser(context *gin.Context) {
 	var input models.MutesRequest
 	if err = context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"code": "BINDING_FAILURE", "error": err.Error()})
+		return
+	}
+	if !input.MutedID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "muted_id not provided"})
+		return
+	}
+	if !input.MuterID.Valid {
+		context.JSON(http.StatusBadRequest, gin.H{"code": "MISSING_FIELD", "error": "muter_id not provided"})
 		return
 	}
 
