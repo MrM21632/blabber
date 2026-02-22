@@ -1,4 +1,5 @@
-# Uncomment if the database and user also don't exist
+# Create the user and database for blabber
+# Comment these lines out if the user and database already exist
 # createuser --interactive blabber
 # createdb -U blabber blabber
 

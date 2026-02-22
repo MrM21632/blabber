@@ -4,7 +4,7 @@ delete from blabber.post_like;
 delete from blabber.post_repost;
 
 
--- Insert post records
+-- Insert test post records
 insert into blabber.post
     (id, user_id, parent_id, contents, created_at, likes, reposts)
 values
@@ -135,7 +135,7 @@ values
     );
 
 
--- Insert post tag records
+-- Insert test post tag records
 insert into blabber.post_tag
     (post_id, tag)
 values
@@ -195,7 +195,7 @@ values
     ('01925fff-fd06-725b-95d5-6ead354f90e5'::uuid, 'random');
 
 
--- Insert post like records
+-- Insert test post like records
 insert into blabber.post_like
     (post_id, user_id, created_at)
 values

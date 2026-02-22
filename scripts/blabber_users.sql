@@ -5,7 +5,7 @@ delete from blabber.user_block;
 delete from blabber.user_mute;
 
 
--- Insert user account records
+-- Insert test user account records
 insert into blabber.user
     (id, username, user_handle, user_bio, email, password_hash, created_at, updated_at, followers, follows)
 values
@@ -245,7 +245,7 @@ values
     );
 
 
--- Insert user following records
+-- Insert test user following records
 insert into blabber.user_follow
     (follower_id, followed_id, created_at)
 values
@@ -301,7 +301,7 @@ values
     ('01925f6f-b9d1-78f4-83aa-9b6b9f70d892'::uuid, '01925f6f-b9d1-7a13-8c33-b23ca1225674'::uuid, current_timestamp);
 
 
--- Insert user block records
+-- Insert test user block records
 insert into blabber.user_block
     (blocker_id, blocked_id, created_at)
 values
@@ -311,7 +311,7 @@ values
     ('01925fd7-8179-7ed2-bfb9-3a7479b9b6ba'::uuid, '01925f6f-b9d1-7a13-8c33-b23ca1225674'::uuid, current_timestamp);
 
 
--- Insert user mute records
+-- Insert test user mute records
 insert into blabber.user_mute
     (muter_id, muted_id, created_at)
 values
