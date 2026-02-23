@@ -1,0 +1,40 @@
+name: user-db-test
+run-name: User DB Integration Tests (executed by @${{ github.actor }} on ${{ github.event.repository.updated_at }})
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: blabber
+          POSTGRES_PASSWORD: blabber
+          POSTGRES_DB: blabber
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U blabber -d blabber"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run DB Migrations
+        run: psql -U blabber -d blabber -a -f ./scripts/blabber.sql
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+      - name: Run User DB Integration Tests
+        env:
+          DATABASE_URL: postgresql://blabber:blabber@localhost:5432/blabber
+        run: |
+          cd users-api
+          go test -v ./api/database_test.go

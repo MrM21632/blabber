@@ -4,32 +4,32 @@ run-name: Push Validation (executed by @${{ github.actor }} on ${{ github.event.
 
 on:
   push:
-    branches: [ "main", "feature/**" ]
+    branches: ["main", "feature/**"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23'
-    - name: Build users-api
-      run: |
-        cd users-api
-        go build -v
-    - name: Test users-api
-      run: |
-        cd users-api
-        go test -v ./...
-    - name: Benchmark users-api
-      run: |
-        cd users-api
-        go test -v -run=NONE -bench=. ./...
-    - name: Run Fuzz Tests for users-api
-      run: |
-        cd users-api
-        go test -v -run=NONE -fuzz=FuzzGenerateHash -fuzztime=1m ./utils
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.26"
+      - name: Build users-api
+        run: |
+          cd users-api
+          go build -v
+      - name: Test users-api
+        run: |
+          cd users-api
+          go test -v ./...
+      - name: Benchmark users-api
+        run: |
+          cd users-api
+          go test -v -run=NONE -bench=. ./...
+      - name: Run Fuzz Tests for users-api
+        run: |
+          cd users-api
+          go test -v -run=NONE -fuzz=FuzzGenerateHash -fuzztime=1m ./utils
