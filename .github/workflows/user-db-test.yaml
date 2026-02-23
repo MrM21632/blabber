@@ -31,7 +31,6 @@ jobs:
           cd scripts
           psql -U blabber -d blabber -a -f ./blabber_1_db.sql
           psql -U blabber -d blabber -a -f ./blabber_2_users.sql
-          psql -U blabber -d blabber -a -f ./blabber_3_posts.sql
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
